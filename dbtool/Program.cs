@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 
 namespace dbtool
 {
@@ -33,6 +32,7 @@ namespace dbtool
             }
 
             var db = new DatabaseOperations(_options, _tagging);
+            var tags = _tagging.GetTagList();
 
             try
             {
@@ -72,15 +72,45 @@ namespace dbtool
                         }
                         else
                         {
-                            db.Restore(args[1]);
+                            if (tags.Contains(args[1]))
+                                db.Restore(args[1]);
+                            else
+                            {
+                                
+                                var filteredTags = _tagging.GetTagList(args[1]);
+                                if (filteredTags.Count > 0)
+                                {
+                                    Console.WriteLine("Select backup number you want to restore, N to cancel:");
+                                    for (var i = 0; i < filteredTags.Count; i++)
+                                        Console.WriteLine(" {0}) {1}", i, filteredTags[i]);
+
+                                    var userInput = Console.ReadLine();
+                                    if (userInput != null && userInput.ToLower() != "n")
+                                    {
+                                        var position = -1;
+                                        if (userInput.Length > 1 && userInput.EndsWith(")"))
+                                        {
+                                            position = int.Parse(userInput.Remove(userInput.Length - 1));
+                                        }
+                                        else
+                                        {
+                                            position = int.Parse(userInput);
+                                        }
+
+                                        if (position > -1)
+                                        {
+                                            var tag = _tagging.GetTagAtPosition(position, args[1]);
+                                            db.Restore(tag);
+                                        }
+                                    }
+                                }
+                                else throw new ArgumentException("Cannot load non-existing tag");
+                            }
                         }
                         break;
                     case "list":
-                        var tags = _tagging.GetTagList();
                         for (var i = 0; i < tags.Count; i++)
-                        {
                             Console.WriteLine(" {0}) {1}", i, tags[i]);
-                        }
                         break;
                     case "delete":
                         if (args.Length < 2)

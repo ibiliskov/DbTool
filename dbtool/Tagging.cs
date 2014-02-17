@@ -32,9 +32,15 @@ namespace dbtool
             return tags;
         }
 
-        public string GetTagAtPosition(int position)
+        public IList<string> GetTagList(string filter)
         {
             var tags = GetTagList();
+            return tags.Where(tag => tag.StartsWith(filter)).ToList();
+        }
+
+        public string GetTagAtPosition(int position, string filter = null)
+        {
+            var tags = filter == null ? GetTagList() : GetTagList(filter);
 
             return tags.ElementAt(position);
         }

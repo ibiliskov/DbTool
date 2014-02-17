@@ -75,6 +75,15 @@ namespace dbtool
 
                         _tagging.Delete(args[1]);
                         break;
+                    case "drop":
+                        Console.WriteLine("You want to drop your databases? (Y/N)");
+                        var pressed = Console.ReadLine();
+                        Console.WriteLine();
+                        if (pressed != null && pressed.ToLower() == "y")
+                        {
+                            db.Drop();
+                        }
+                        break;
                 }
             }
             catch (Exception ex)

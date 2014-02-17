@@ -50,6 +50,17 @@ namespace dbtool
             Console.WriteLine("Database restore done.");
         }
 
+        public void Drop()
+        {
+            Console.WriteLine("Dropping database...");
+            for (var i = 0; i < _options.Databases.Count; i++)
+            {
+                Console.WriteLine("Db: " + _options.Databases[i]);
+                ExecuteScalar(string.Format(@"DROP DATABASE {0}", _options.Databases[i]));
+            }
+            Console.WriteLine("Finished");
+        }
+
         private object ExecuteScalar(string sqlCommand)
         {
             var connection = new SqlConnection(_options.ConnectionString);

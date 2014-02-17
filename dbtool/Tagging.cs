@@ -32,6 +32,13 @@ namespace dbtool
             return tags;
         }
 
+        public string GetTagAtPosition(int position)
+        {
+            var tags = GetTagList();
+
+            return tags.ElementAt(position);
+        }
+
         public string GetLocationForDatabase(string databaseName, string tagName)
         {
             return Path.Combine(_options.BackupFolder, string.Format("{0}.{1}.bak", tagName, databaseName));
@@ -53,9 +60,16 @@ namespace dbtool
 
                 if (extractTag == tagname)
                 {
+                    ConsoleHelper.WriteWarning("Deleting " + file);
                     File.Delete(file);
                 }
             }
+        }
+
+        public void DeleteAtPosition(int position)
+        {
+            var tagToDelete = GetTagAtPosition(position);
+            Delete(tagToDelete);
         }
     }
 }

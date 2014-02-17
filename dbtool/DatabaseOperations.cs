@@ -25,12 +25,13 @@ namespace dbtool
             Console.WriteLine("Starting database backup");
             for (var i = 0; i < _options.Databases.Count; i++)
             {
-                Console.WriteLine("Db: " + _options.Databases[i]);
+                var dbToRestore = _options.Databases[i];
+                var dbPath = _tagging.GetLocationForDatabase(_options.Databases[i], tagName);
+
+                Console.WriteLine("Backup {0} to {1}", dbToRestore, dbPath);
                 ExecuteScalar(string.Format(
                     @"BACKUP DATABASE {0} TO  DISK = N'{1}' WITH NOFORMAT, NOINIT,  NAME = N'{0}-Full Database Backup', SKIP",
-                    _options.Databases[i],
-                    _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
-                    ));
+                    dbToRestore, dbPath));
             }
             ConsoleHelper.WriteSuccess("Database backup done.");
         }
@@ -40,12 +41,10 @@ namespace dbtool
             Console.WriteLine("Starting database restore");
             for (var i = 0; i < _options.Databases.Count; i++)
             {
-                Console.WriteLine("Db: " + _options.Databases[i]);
-                ExecuteScalar(string.Format(
-                    @"USE [master];RESTORE DATABASE {0} FROM  DISK = N'{1}'",
-                    _options.Databases[i],
-                    _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
-                    ));
+                var dbToRestore = _options.Databases[i];
+                var dbPath = _tagging.GetLocationForDatabase(_options.Databases[i], tagName);
+                Console.WriteLine("Restoring {0} from backup {1}", dbToRestore, dbPath);
+                ExecuteScalar(string.Format(@"USE [master];RESTORE DATABASE {0} FROM  DISK = N'{1}'", dbToRestore, dbPath));
             }
             ConsoleHelper.WriteSuccess("Database restore done.");
         }

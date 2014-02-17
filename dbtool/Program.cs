@@ -62,7 +62,18 @@ namespace dbtool
                             return;
                         }
 
-                        db.Restore(args[1]);
+                        if (args[1] == "last")
+                            args[1] = "0)";
+
+                        if (args[1].EndsWith(")") && args[1].Length > 1)
+                        {
+                            var tag = _tagging.GetTagAtPosition(int.Parse(args[1].Remove(args[1].Length - 1)));
+                            db.Restore(tag);
+                        }
+                        else
+                        {
+                            db.Restore(args[1]);
+                        }
                         break;
                     case "list":
                         var tags = _tagging.GetTagList();
@@ -78,7 +89,14 @@ namespace dbtool
                             return;
                         }
 
-                        _tagging.Delete(args[1]);
+                        if (args[1].EndsWith(")") && args[1].Length > 1)
+                        {
+                            _tagging.DeleteAtPosition(int.Parse(args[1].Remove(args[1].Length - 1)));
+                        }
+                        else
+                        {
+                            _tagging.Delete(args[1]);
+                        }
                         break;
                     case "drop":
                         ConsoleHelper.WriteWarning("You want to drop your databases? (Y/N)");
@@ -100,11 +118,11 @@ namespace dbtool
         static void EchoHelp()
         {
             Console.WriteLine("USAGE: ");
-            Console.WriteLine("    list                   list all created tags");
-            Console.WriteLine("    save <tag> | now       create database backup to specified folder");
-            Console.WriteLine("    load <tag> | last      restore database backup from specific tag");
-            Console.WriteLine("    delete <tag>           delete database backup by tag name");
-            Console.WriteLine("    drop                   deletes database from server");
+            Console.WriteLine("    list                         list all created tags");
+            Console.WriteLine("    save <tag> | now             create database backup to specified folder");
+            Console.WriteLine("    load <tag> | last | <num>)   restore database backup from specific tag or number");
+            Console.WriteLine("    delete <tag> | <num>)        delete database backup by tag name or number");
+            Console.WriteLine("    drop                         deletes database from server");
         }
     }
 }

@@ -52,6 +52,20 @@ namespace dbtool
 
                         db.Backup(args[1]);
                         break;
+                    case "load":
+                        if (args.Length < 2)
+                        {
+                            EchoHelp();
+                            return;
+                        }
+
+                        db.Restore(args[1]);
+                        break;
+                    case "list":
+                        var tags = _tagging.GetTagList();
+                        foreach (var tag in tags)
+                            Console.WriteLine(tag);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -67,6 +81,7 @@ namespace dbtool
             Console.WriteLine("    save <tag>      create database backup to specified folder");
             Console.WriteLine("    load <tag>      restore database backup from specific tag");
             Console.WriteLine("    delete <tag>    delete database backup by tag name");
+            Console.WriteLine("    drop            deletes database from server");
         }
     }
 }

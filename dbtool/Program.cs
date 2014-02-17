@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Text;
 
 namespace dbtool
 {
@@ -41,7 +39,7 @@ namespace dbtool
                 {
                     case "test":
                         db.TestConnection();
-                        Console.WriteLine("Connection OK");
+                        ConsoleHelper.WriteSuccess("Connection OK");
                         break;
                     case "save":
                         if (args.Length < 2)
@@ -64,7 +62,7 @@ namespace dbtool
                     case "list":
                         var tags = _tagging.GetTagList();
                         foreach (var tag in tags)
-                            Console.WriteLine(tag);
+                            Console.WriteLine(" " + tag);
                         break;
                     case "delete":
                         if (args.Length < 2)
@@ -76,7 +74,7 @@ namespace dbtool
                         _tagging.Delete(args[1]);
                         break;
                     case "drop":
-                        Console.WriteLine("You want to drop your databases? (Y/N)");
+                        ConsoleHelper.WriteWarning("You want to drop your databases? (Y/N)");
                         var pressed = Console.ReadLine();
                         Console.WriteLine();
                         if (pressed != null && pressed.ToLower() == "y")
@@ -88,7 +86,7 @@ namespace dbtool
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                ConsoleHelper.WriteError(ex.Message);
             }
         }
 

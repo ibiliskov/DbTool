@@ -32,7 +32,7 @@ namespace dbtool
                     _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
                     ));
             }
-            Console.WriteLine("Database backup done.");
+            ConsoleHelper.WriteSuccess("Database backup done.");
         }
 
         public void Restore(string tagName)
@@ -47,7 +47,7 @@ namespace dbtool
                     _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
                     ));
             }
-            Console.WriteLine("Database restore done.");
+            ConsoleHelper.WriteSuccess("Database restore done.");
         }
 
         public void Drop()
@@ -58,7 +58,7 @@ namespace dbtool
                 Console.WriteLine("Db: " + _options.Databases[i]);
                 ExecuteScalar(string.Format(@"DROP DATABASE {0}", _options.Databases[i]));
             }
-            Console.WriteLine("Finished");
+            ConsoleHelper.WriteSuccess("Finished");
         }
 
         private object ExecuteScalar(string sqlCommand)

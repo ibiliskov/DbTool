@@ -43,8 +43,18 @@ namespace dbtool
             {
                 var dbToRestore = _options.Databases[i];
                 var dbPath = _tagging.GetLocationForDatabase(_options.Databases[i], tagName);
+                
                 Console.WriteLine("Restoring {0} from backup {1}", dbToRestore, dbPath);
+                
+                var dbExists = ExecuteScalar(string.Format("IF EXISTS (SELECT * from sys.databases WHERE Name = '{0}') SELECT 1; ELSE SELECT 0;", dbToRestore));
+                if ((int) dbExists == 1)
+                {
+                    ExecuteScalar(string.Format("ALTER DATABASE {0} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;",
+                        dbToRestore));
+                }
+
                 ExecuteScalar(string.Format(@"USE [master];RESTORE DATABASE {0} FROM  DISK = N'{1}'", dbToRestore, dbPath));
+                ExecuteScalar(string.Format("ALTER DATABASE {0} SET MULTI_USER;", dbToRestore));
             }
             ConsoleHelper.WriteSuccess("Database restore done.");
         }

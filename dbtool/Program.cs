@@ -8,7 +8,8 @@ namespace dbtool
 {
     class Program
     {
-        private static Options _options = null;
+        private static Options _options;
+        private static Tagging _tagging;
 
         static void Main(string[] args)
         {
@@ -18,6 +19,8 @@ namespace dbtool
                 ConnectionString = ConfigurationManager.AppSettings.Get("connectionString"),
                 Databases = new List<string>(ConfigurationManager.AppSettings.Get("databases").Split(';', ','))
             };
+
+            _tagging = new Tagging(_options);
 
             ParseCommand(args);
         }
@@ -30,7 +33,7 @@ namespace dbtool
                 return;
             }
 
-            var db = new DatabaseOperations(_options);
+            var db = new DatabaseOperations(_options, _tagging);
 
             try
             {
@@ -41,7 +44,13 @@ namespace dbtool
                         Console.WriteLine("Connection OK");
                         break;
                     case "save":
-                        db.Backup();
+                        if (args.Length < 2)
+                        {
+                            EchoHelp();
+                            return;
+                        }
+
+                        db.Backup(args[1]);
                         break;
                 }
             }
@@ -57,6 +66,7 @@ namespace dbtool
             Console.WriteLine("    list            list all created tags");
             Console.WriteLine("    save <tag>      create database backup to specified folder");
             Console.WriteLine("    load <tag>      restore database backup from specific tag");
+            Console.WriteLine("    delete <tag>    delete database backup by tag name");
         }
     }
 }

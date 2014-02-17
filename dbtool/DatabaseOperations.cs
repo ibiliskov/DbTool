@@ -1,43 +1,66 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 
 namespace dbtool
 {
     public class DatabaseOperations
     {
         private readonly Options _options;
+        private readonly Tagging _tagging;
 
-        public DatabaseOperations(Options options)
+        public DatabaseOperations(Options options, Tagging tagging)
         {
             _options = options;
+            _tagging = tagging;
         }
 
         public void TestConnection()
         {
-            const int test = 3;
+            if ((int)ExecuteScalar("SELECT 3") != 3)
+                throw new ArgumentException("Cannot connect to database.");
+        }
+
+        public void Backup(string tagName)
+        {
+            Console.WriteLine("Starting database backup");
+            for (var i = 0; i < _options.Databases.Count; i++)
+            {
+                Console.WriteLine("Db: " + _options.Databases[i]);
+                ExecuteScalar(string.Format(
+                    @"BACKUP DATABASE {0} TO  DISK = N'{1}' WITH NOFORMAT, NOINIT,  NAME = N'{0}-Full Database Backup', SKIP",
+                    _options.Databases[i],
+                    _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
+                    ));
+            }
+            Console.WriteLine("Database backup done.");
+        }
+
+        public void Restore(string tagName)
+        {
+            Console.WriteLine("Starting database restore");
+            for (var i = 0; i < _options.Databases.Count; i++)
+            {
+                Console.WriteLine("Db: " + _options.Databases[i]);
+                ExecuteScalar(string.Format(
+                    @"USE [master];RESTORE DATABASE {0} FROM  DISK = N'{1}'",
+                    _options.Databases[i],
+                    _tagging.GetLocationForDatabase(_options.Databases[i], tagName)
+                    ));
+            }
+            Console.WriteLine("Database restore done.");
+        }
+
+        private object ExecuteScalar(string sqlCommand)
+        {
             var connection = new SqlConnection(_options.ConnectionString);
-            var command = new SqlCommand("SELECT " + test, connection);
+            var command = new SqlCommand(sqlCommand, connection);
             connection.Open();
 
             var result = command.ExecuteScalar();
 
             connection.Close();
 
-            if ((int) result != test)
-                throw new ArgumentException("Cannot connect to database.");
-        }
-
-        public void Backup()
-        {
-            
-        }
-
-        public void Restore()
-        {
-            
+            return result;
         }
     }
 }

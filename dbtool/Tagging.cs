@@ -1,4 +1,6 @@
-﻿namespace dbtool
+﻿using System.IO;
+
+namespace dbtool
 {
     public class Tagging
     {
@@ -11,7 +13,7 @@
 
         public string GetLocationForDatabase(string databaseName, string tagName)
         {
-            return null;
+            return Path.Combine(_options.BackupFolder, string.Format("{0}.{1}.bak", tagName, databaseName));
         }
     }
 }

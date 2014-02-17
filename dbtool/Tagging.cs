@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml;
 
 namespace dbtool
 {
@@ -12,7 +15,7 @@ namespace dbtool
             _options = options;
         }
 
-        public List<string> GetTagList()
+        public IEnumerable<string> GetTagList()
         {
             var files = Directory.GetFiles(_options.BackupFolder, "*.bak");
             var tags = new List<string>();
@@ -33,6 +36,27 @@ namespace dbtool
         public string GetLocationForDatabase(string databaseName, string tagName)
         {
             return Path.Combine(_options.BackupFolder, string.Format("{0}.{1}.bak", tagName, databaseName));
+        }
+
+        public void Delete(string tagname)
+        {
+            var tags = GetTagList();
+
+            if (!tags.Contains(tagname))
+                throw new ArgumentException("Cannot delete non-existing tag.");
+
+            var files = Directory.GetFiles(_options.BackupFolder, "*.bak");
+
+            foreach (var file in files)
+            {
+                var filename = new FileInfo(file).Name;
+                var extractTag = filename.Split('.')[0];
+
+                if (extractTag == tagname)
+                {
+                    File.Delete(file);
+                }
+            }
         }
     }
 }

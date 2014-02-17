@@ -66,11 +66,20 @@ namespace dbtool
                         foreach (var tag in tags)
                             Console.WriteLine(tag);
                         break;
+                    case "delete":
+                        if (args.Length < 2)
+                        {
+                            EchoHelp();
+                            return;
+                        }
+
+                        _tagging.Delete(args[1]);
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message + ex.StackTrace);
+                Console.WriteLine(ex.Message);
             }
         }
 

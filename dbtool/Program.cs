@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 
 namespace dbtool
 {
@@ -18,9 +19,19 @@ namespace dbtool
                 Databases = new List<string>(ConfigurationManager.AppSettings.Get("databases").Split(';', ','))
             };
 
-            _tagging = new Tagging(_options);
+            try
+            {
+                if (!Directory.Exists(_options.BackupFolder))
+                    throw new ArgumentException("Backup foler doesn't exist. Please create it.");
 
-            ParseCommand(args);
+                _tagging = new Tagging(_options);
+
+                ParseCommand(args);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteError(ex.Message);
+            }
         }
 
         static void ParseCommand(string[] args)
@@ -51,7 +62,7 @@ namespace dbtool
 
                         var tagName = args[1];
                         if (args[1] == "now")
-                            tagName = DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss");
+                            tagName = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss");
 
                         db.Backup(tagName);
                         break;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 
 namespace dbtool
 {
@@ -65,8 +66,10 @@ namespace dbtool
                         break;
                     case "list":
                         var tags = _tagging.GetTagList();
-                        foreach (var tag in tags)
-                            Console.WriteLine(" " + tag);
+                        for (var i = 0; i < tags.Count; i++)
+                        {
+                            Console.WriteLine(" {0}) {1}", i, tags[i]);
+                        }
                         break;
                     case "delete":
                         if (args.Length < 2)

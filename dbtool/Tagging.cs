@@ -14,15 +14,15 @@ namespace dbtool
             _options = options;
         }
 
-        public IEnumerable<string> GetTagList()
+        public IList<string> GetTagList()
         {
-            var files = Directory.GetFiles(_options.BackupFolder, "*.bak");
+            var backupDirectory = new DirectoryInfo(_options.BackupFolder);
+            var files = backupDirectory.GetFiles("*.bak").OrderByDescending(f => f.CreationTime).ToList();
             var tags = new List<string>();
 
             foreach (var file in files)
             {
-                var filename = new FileInfo(file).Name;
-                var extractTag = filename.Split('.')[0];
+                var extractTag = file.Name.Split('.')[0];
                 if (!tags.Contains(extractTag))
                 {
                     tags.Add(extractTag);

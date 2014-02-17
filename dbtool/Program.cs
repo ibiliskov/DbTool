@@ -48,7 +48,11 @@ namespace dbtool
                             return;
                         }
 
-                        db.Backup(args[1]);
+                        var tagName = args[1];
+                        if (args[1] == "now")
+                            tagName = DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss");
+
+                        db.Backup(tagName);
                         break;
                     case "load":
                         if (args.Length < 2)
@@ -93,11 +97,11 @@ namespace dbtool
         static void EchoHelp()
         {
             Console.WriteLine("USAGE: ");
-            Console.WriteLine("    list            list all created tags");
-            Console.WriteLine("    save <tag>      create database backup to specified folder");
-            Console.WriteLine("    load <tag>      restore database backup from specific tag");
-            Console.WriteLine("    delete <tag>    delete database backup by tag name");
-            Console.WriteLine("    drop            deletes database from server");
+            Console.WriteLine("    list                   list all created tags");
+            Console.WriteLine("    save <tag> | now       create database backup to specified folder");
+            Console.WriteLine("    load <tag> | last      restore database backup from specific tag");
+            Console.WriteLine("    delete <tag>           delete database backup by tag name");
+            Console.WriteLine("    drop                   deletes database from server");
         }
     }
 }

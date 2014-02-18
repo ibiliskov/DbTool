@@ -22,7 +22,7 @@ namespace dbtool
             try
             {
                 if (!Directory.Exists(_options.BackupFolder))
-                    throw new ArgumentException("Backup foler doesn't exist. Please create it.");
+                    throw new ArgumentException("Backup foler doesn't exist. Edit app.config and create folder.");
 
                 _tagging = new Tagging(_options);
 
@@ -52,6 +52,11 @@ namespace dbtool
                     case "test":
                         db.TestConnection();
                         ConsoleHelper.WriteSuccess("Connection OK");
+
+                        if (!Directory.Exists(_options.BackupFolder))
+                            throw new ArgumentException("Backup foler doesn't exist. Edit app.config and create folder.");
+                        ConsoleHelper.WriteSuccess("Backup folder OK");
+                        db.TestDatabases();
                         break;
                     case "save":
                         if (args.Length < 2)
@@ -161,9 +166,22 @@ namespace dbtool
             Console.WriteLine("USAGE: ");
             Console.WriteLine("    list                         list all created tags");
             Console.WriteLine("    save <tag> | now             create database backup to specified folder");
-            Console.WriteLine("    load <tag> | last | <num>)   restore database backup from specific tag or number");
+            Console.WriteLine("    load <tag> | last | <num>)   restore backup from specific tag or number");
             Console.WriteLine("    delete <tag> | <num>)        delete database backup by tag name or number");
             Console.WriteLine("    drop                         deletes database from server");
+            Console.WriteLine("    test                         test settings are correct");
+            Console.WriteLine();
+            Console.WriteLine("EXAMPLES: ");
+            Console.WriteLine("    dbtool list                  list all tags, with their numbers");
+            Console.WriteLine("    dbtool save now              create db backup with current timestamp as tag");
+            Console.WriteLine("    dbtool save myTag            create db backup with name myTag");
+            Console.WriteLine("    dbtool load myTag            restore db backup with name myTag");
+            Console.WriteLine("    dbtool load last             restore last backup from backup folder");
+            Console.WriteLine("    dbtool load my               offer all tags starting with input");
+            Console.WriteLine("    dbtool load 2)               load 2nd restore (visible using list command)");
+            Console.WriteLine("    dbtool delete myTag          delete backup tagged with myTag");
+            Console.WriteLine("    dbtool delete 2)             delete 2nd backup (visible using list command)");
+            Console.WriteLine("    dbtool drop                  drops databases from server");
         }
     }
 }

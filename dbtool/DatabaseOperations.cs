@@ -20,6 +20,15 @@ namespace dbtool
                 throw new ArgumentException("Cannot connect to database.");
         }
 
+        public void TestDatabases()
+        {
+            foreach (var database in _options.Databases)
+            {
+                ExecuteScalar("USE " + database);
+                ConsoleHelper.WriteSuccess(database + " OK");
+            }
+        }
+
         public void Backup(string tagName)
         {
             Console.WriteLine("Starting database backup");

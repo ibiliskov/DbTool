@@ -45,6 +45,15 @@ namespace dbtool
             return tags.ElementAt(position);
         }
 
+        public List<string> GetTagFiles(string tagName)
+        {
+            var tags = GetTagList();
+            if (!tags.Contains(tagName))
+                throw new ArgumentException("Invalid tag.");
+
+            return _options.Databases.Select(d => GetLocationForDatabase(d, tagName)).ToList();
+        }
+
         public string GetLocationForDatabase(string databaseName, string tagName)
         {
             return Path.Combine(_options.BackupFolder, string.Format("{0}.{1}.bak", tagName, databaseName));

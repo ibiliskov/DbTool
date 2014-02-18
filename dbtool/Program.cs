@@ -7,12 +7,9 @@ namespace dbtool
 {
     class Program
     {
-        private static Options _options;
-        private static Tagging _tagging;
-
         static void Main(string[] args)
         {
-            _options = new Options
+            var options = new Options
             {
                 BackupFolder = ConfigurationManager.AppSettings.Get("backupFolder"),
                 ConnectionString = ConfigurationManager.AppSettings.Get("connectionString"),
@@ -21,12 +18,13 @@ namespace dbtool
 
             try
             {
-                if (!Directory.Exists(_options.BackupFolder))
+                if (!Directory.Exists(options.BackupFolder))
                     throw new ArgumentException("Backup foler doesn't exist. Edit app.config and create folder.");
 
-                _tagging = new Tagging(_options);
+                var tagging = new Tagging(options);
+                var command = new Input(args);
 
-                ParseCommand(args);
+                ProcessCommand(command, options, tagging, new DatabaseOperations(options, tagging));
             }
             catch (Exception ex)
             {
@@ -34,66 +32,63 @@ namespace dbtool
             }
         }
 
-        static void ParseCommand(string[] args)
+        static void ProcessCommand(Input input, Options options, Tagging tagging, DatabaseOperations db)
         {
-            if (args.Length == 0)
-            {
-                EchoHelp();
-                return;
-            }
-
-            var db = new DatabaseOperations(_options, _tagging);
-            var tags = _tagging.GetTagList();
+            var tags = tagging.GetTagList();
 
             try
             {
-                switch (args[0])
+                switch (input.Verb)
                 {
+                    case "help":
+                        EchoHelp();
+                        break;
                     case "test":
                         db.TestConnection();
                         ConsoleHelper.WriteSuccess("Connection OK");
 
-                        if (!Directory.Exists(_options.BackupFolder))
+                        if (!Directory.Exists(options.BackupFolder))
                             throw new ArgumentException("Backup foler doesn't exist. Edit app.config and create folder.");
                         ConsoleHelper.WriteSuccess("Backup folder OK");
                         db.TestDatabases();
                         break;
                     case "save":
-                        if (args.Length < 2)
+                        if (input.ParamCount == 0)
                         {
                             EchoHelp();
                             return;
                         }
 
-                        var tagName = args[1];
-                        if (args[1] == "now")
+                        var tagName = input.P1;
+                        if (input.P1 == "now")
                             tagName = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss");
 
                         db.Backup(tagName);
                         break;
                     case "load":
-                        if (args.Length < 2)
+                        if (input.ParamCount == 0)
                         {
                             EchoHelp();
                             return;
                         }
 
-                        if (args[1] == "last")
-                            args[1] = "0)";
+                        var loadParam = input.P1;
+                        if (loadParam == "last")
+                            loadParam = "0)";
 
-                        if (args[1].EndsWith(")") && args[1].Length > 1)
+                        if (loadParam.EndsWith(")"))
                         {
-                            var tag = _tagging.GetTagAtPosition(int.Parse(args[1].Remove(args[1].Length - 1)));
+                            var position = ExtractPosition(loadParam);
+                            var tag = tagging.GetTagAtPosition(position);
                             db.Restore(tag);
                         }
                         else
                         {
-                            if (tags.Contains(args[1]))
-                                db.Restore(args[1]);
+                            if (tags.Contains(loadParam))
+                                db.Restore(loadParam);
                             else
                             {
-                                
-                                var filteredTags = _tagging.GetTagList(args[1]);
+                                var filteredTags = tagging.GetTagList(loadParam);
                                 if (filteredTags.Count > 0)
                                 {
                                     Console.WriteLine("Select backup number you want to restore, N to cancel:");
@@ -103,19 +98,11 @@ namespace dbtool
                                     var userInput = Console.ReadLine();
                                     if (userInput != null && userInput.ToLower() != "n")
                                     {
-                                        var position = -1;
-                                        if (userInput.Length > 1 && userInput.EndsWith(")"))
-                                        {
-                                            position = int.Parse(userInput.Remove(userInput.Length - 1));
-                                        }
-                                        else
-                                        {
-                                            position = int.Parse(userInput);
-                                        }
+                                        var position = ExtractPosition(userInput);
 
                                         if (position > -1)
                                         {
-                                            var tag = _tagging.GetTagAtPosition(position, args[1]);
+                                            var tag = tagging.GetTagAtPosition(position, loadParam);
                                             db.Restore(tag);
                                         }
                                     }
@@ -129,19 +116,19 @@ namespace dbtool
                             Console.WriteLine(" {0}) {1}", i, tags[i]);
                         break;
                     case "delete":
-                        if (args.Length < 2)
+                        if (input.ParamCount == 0)
                         {
                             EchoHelp();
                             return;
                         }
 
-                        if (args[1].EndsWith(")") && args[1].Length > 1)
+                        if (input.P1.EndsWith(")"))
                         {
-                            _tagging.DeleteAtPosition(int.Parse(args[1].Remove(args[1].Length - 1)));
+                            tagging.DeleteAtPosition(ExtractPosition(input.P1));
                         }
                         else
                         {
-                            _tagging.Delete(args[1]);
+                            tagging.Delete(input.P1);
                         }
                         break;
                     case "drop":
@@ -153,12 +140,53 @@ namespace dbtool
                             db.Drop();
                         }
                         break;
+                    case "zip":
+                        if (input.ParamCount == 0)
+                        {
+                            EchoHelp();
+                            return;
+                        }
+
+                        if (input.P1.EndsWith(")"))
+                        {
+                            var position = ExtractPosition(input.P1);
+                            new Compress(tagging, options).Zip(position);
+                        }
+                        else
+                        {
+                            new Compress(tagging, options).Zip(input.P1);
+                        }
+                        break;
+                    case "unzip":
+                        if (input.ParamCount == 0)
+                        {
+                            EchoHelp();
+                            return;
+                        }
+
+                        new Compress(tagging, options).Unzip(input.P1);
+                        break;
                 }
             }
             catch (Exception ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
             }
+        }
+
+        static int ExtractPosition(string input)
+        {
+            int position = -1;
+            if (input.Length > 1 && input.EndsWith(")"))
+            {
+                position = int.Parse(input.Remove(input.Length - 1));
+            }
+            else
+            {
+                position = int.Parse(input);
+            }
+
+            return position;
         }
 
         static void EchoHelp()

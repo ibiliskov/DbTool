@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 namespace dbtool
 {
@@ -45,6 +47,37 @@ namespace dbtool
 
             ZipFile.ExtractToDirectory(zipFile, _options.BackupFolder);
             File.Delete(zipFile);
+        }
+
+        public IList<string> GetZipList()
+        {
+            var backupDirectory = new DirectoryInfo(_options.BackupFolder);
+            var files = backupDirectory.GetFiles("*.zip").OrderByDescending(f => f.CreationTime).ToList();
+            var zips = new List<string>();
+
+            foreach (var file in files)
+            {
+                var extractTag = file.Name.Split('.')[0];
+                if (!zips.Contains(extractTag))
+                {
+                    zips.Add(extractTag);
+                }
+            }
+
+            return zips;
+        }
+
+        public IList<string> GetZipList(string filter)
+        {
+            var zips = GetZipList();
+            return zips.Where(tag => tag.StartsWith(filter)).ToList();
+        }
+
+        public string GetZipAtPosition(int position, string filter = null)
+        {
+            var zips = filter == null ? GetZipList() : GetZipList(filter);
+
+            return zips.ElementAt(position);
         }
     }
 }

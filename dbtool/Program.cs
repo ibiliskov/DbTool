@@ -24,7 +24,7 @@ namespace dbtool
                 var tagging = new Tagging(options);
                 var command = new Input(args);
 
-                ProcessCommand(command, options, tagging, new DatabaseOperations(options, tagging));
+                ProcessCommand(command, options, tagging, new DatabaseOperations(options, tagging), new Compress(tagging, options));
             }
             catch (Exception ex)
             {
@@ -32,7 +32,7 @@ namespace dbtool
             }
         }
 
-        static void ProcessCommand(Input input, Options options, Tagging tagging, DatabaseOperations db)
+        static void ProcessCommand(Input input, Options options, Tagging tagging, DatabaseOperations db, Compress compress)
         {
             var tags = tagging.GetTagList();
 
@@ -147,14 +147,42 @@ namespace dbtool
                             return;
                         }
 
-                        if (input.P1.EndsWith(")"))
+                        var zipParam = input.P1;
+                        if (zipParam == "last")
+                            zipParam = "0)";
+
+                        if (zipParam.EndsWith(")"))
                         {
-                            var position = ExtractPosition(input.P1);
-                            new Compress(tagging, options).Zip(position);
+                            var position = ExtractPosition(zipParam);
+                            compress.Zip(position);
                         }
                         else
                         {
-                            new Compress(tagging, options).Zip(input.P1);
+                            if (tags.Contains(zipParam))
+                                compress.Zip(zipParam);
+                            else
+                            {
+                                var filteredTags = tagging.GetTagList(zipParam);
+                                if (filteredTags.Count > 0)
+                                {
+                                    Console.WriteLine("Select tag number you want to zip, N to cancel:");
+                                    for (var i = 0; i < filteredTags.Count; i++)
+                                        Console.WriteLine(" {0}) {1}", i, filteredTags[i]);
+
+                                    var userInput = Console.ReadLine();
+                                    if (userInput != null && userInput.ToLower() != "n")
+                                    {
+                                        var position = ExtractPosition(userInput);
+
+                                        if (position > -1)
+                                        {
+                                            var tag = tagging.GetTagAtPosition(position, zipParam);
+                                            compress.Zip(tag);
+                                        }
+                                    }
+                                }
+                                else throw new ArgumentException("Cannot zip non-existing tag");
+                            }
                         }
                         break;
                     case "unzip":
@@ -164,7 +192,35 @@ namespace dbtool
                             return;
                         }
 
-                        new Compress(tagging, options).Unzip(input.P1);
+                        var unzipParam = input.P1;
+                        var zips = compress.GetZipList();
+
+                        if (zips.Contains(unzipParam))
+                            compress.Unzip(unzipParam);
+                        else
+                        {
+                            var filteredZips = compress.GetZipList(unzipParam);
+                            if (filteredZips.Count > 0)
+                            {
+                                Console.WriteLine("Select tag you want to unzip, N to cancel:");
+                                for (var i = 0; i < filteredZips.Count; i++)
+                                    Console.WriteLine(" {0}) {1}", i, filteredZips[i]);
+
+                                var userInput = Console.ReadLine();
+                                if (userInput != null && userInput.ToLower() != "n")
+                                {
+                                    var position = ExtractPosition(userInput);
+
+                                    if (position > -1)
+                                    {
+                                        var zip = compress.GetZipAtPosition(position, unzipParam);
+                                        compress.Unzip(zip);
+                                    }
+                                }
+                            }
+                            else throw new ArgumentException("Cannot load non-existing tag");
+                        }
+
                         break;
                 }
             }
@@ -196,6 +252,8 @@ namespace dbtool
             Console.WriteLine("    save <tag> | now             create database backup to specified folder");
             Console.WriteLine("    load <tag> | last | <num>)   restore backup from specific tag or number");
             Console.WriteLine("    delete <tag> | <num>)        delete database backup by tag name or number");
+            Console.WriteLine("    zip <tag> | last | <num>)    zip database backup by tag name or number");
+            Console.WriteLine("    unzip <tag>                  unzip database backup by tag name");
             Console.WriteLine("    drop                         deletes database from server");
             Console.WriteLine("    test                         test settings are correct");
             Console.WriteLine();

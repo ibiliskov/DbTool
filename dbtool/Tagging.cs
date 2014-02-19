@@ -45,7 +45,7 @@ namespace dbtool
             return tags.ElementAt(position);
         }
 
-        public List<string> GetTagFiles(string tagName)
+        public IEnumerable<string> GetTagFiles(string tagName)
         {
             var tags = GetTagList();
             if (!tags.Contains(tagName))

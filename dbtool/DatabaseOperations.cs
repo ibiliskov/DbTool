@@ -55,7 +55,7 @@ namespace dbtool
                 
                 Console.WriteLine("Restoring {0} from backup {1}", dbToRestore, dbPath);
                 
-                var dbExists = ExecuteScalar(string.Format("IF EXISTS (SELECT * from sys.databases WHERE Name = '{0}') SELECT 1; ELSE SELECT 0;", dbToRestore));
+                var dbExists = ExecuteScalar(string.Format("IF EXISTS (SELECT * from sys.databases WHERE Name = '{0}') SELECT 1; ELSE SELECT 0;", dbToRestore.Replace('[', '\0').Replace(']', '\0')));
                 if ((int) dbExists == 1)
                 {
                     ExecuteScalar(string.Format("ALTER DATABASE {0} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;",

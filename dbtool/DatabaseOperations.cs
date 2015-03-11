@@ -79,6 +79,15 @@ namespace dbtool
             ConsoleHelper.WriteSuccess("Finished");
         }
 
+        public object ExecuteString(string sqlCommand)
+        {
+            Console.WriteLine("Executing SQL");
+            var result = ExecuteScalar(sqlCommand);
+            Console.WriteLine("Finished");
+
+            return result;
+        }
+
         private object ExecuteScalar(string sqlCommand)
         {
             var connection = new SqlConnection(_options.ConnectionString);

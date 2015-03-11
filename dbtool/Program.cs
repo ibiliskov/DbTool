@@ -35,6 +35,7 @@ namespace dbtool
         static void ProcessCommand(Input input, Options options, Tagging tagging, DatabaseOperations db, Compress compress)
         {
             var tags = tagging.GetTagList();
+            var scripts = tagging.GetScriptList();
 
             try
             {
@@ -219,6 +220,22 @@ namespace dbtool
                                 }
                             }
                             else throw new ArgumentException("Cannot load non-existing tag");
+                        }
+
+                        break;
+                    case "script":
+                        if (input.ParamCount == 0)
+                        {
+                            for (var i = 0; i < scripts.Count; i++)
+                                Console.WriteLine(" {0}) {1}", i, scripts[i]);
+                        }
+                        else
+                        {
+                            var script = tagging.GetScript(input.P1);
+                            var result = db.ExecuteString(script);
+
+                            if (result != null)
+                                ConsoleHelper.WriteSuccess(result.ToString());
                         }
 
                         break;

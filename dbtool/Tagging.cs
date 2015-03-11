@@ -86,5 +86,27 @@ namespace dbtool
             var tagToDelete = GetTagAtPosition(position);
             Delete(tagToDelete);
         }
+
+        public IList<string> GetScriptList()
+        {
+            var backupDirectory = new DirectoryInfo(_options.BackupFolder);
+            var files = backupDirectory.GetFiles("*.sql").OrderByDescending(f => f.CreationTime).ToList();
+            var tags = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (!tags.Contains(file.Name))
+                {
+                    tags.Add(file.Name);
+                }
+            }
+
+            return tags;
+        }
+
+        public string GetScript(string scriptName)
+        {
+            return File.ReadAllText(_options.BackupFolder + '\\' + scriptName);
+        }
     }
 }
